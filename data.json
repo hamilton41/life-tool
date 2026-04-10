@@ -1,0 +1,59 @@
+{
+  "tasks": [
+    {
+      "id": "bb90e063-78e1-473d-8233-52dae06a20e6",
+      "name": "冥想",
+      "icon": "🧘",
+      "color": "#6366f1",
+      "scheduleType": "weekly",
+      "weeklyTarget": 3,
+      "timerMode": "countdown",
+      "countdownMinutes": 10,
+      "createdAt": "2026-04-10T07:52:30.000Z"
+    },
+    {
+      "id": "43e4f6ee-9a80-4634-9ba9-c1f4369e7fc8",
+      "name": "跑步",
+      "icon": "🏃",
+      "color": "#6366f1",
+      "scheduleType": "fixed",
+      "fixedDays": [
+        1,
+        2,
+        3,
+        5
+      ],
+      "timeSlot": {
+        "start": "09:00",
+        "end": "22:00"
+      },
+      "timerMode": "none",
+      "createdAt": "2026-04-10T08:13:14.611Z"
+    },
+    {
+      "id": "f4b4744e-0c0c-4fca-a9fa-90e0fee57399",
+      "name": "teste",
+      "icon": "📌",
+      "color": "#6366f1",
+      "scheduleType": "weekly",
+      "weeklyTarget": 3,
+      "timerMode": "none",
+      "createdAt": "2026-04-10T08:14:30.081Z"
+    },
+    {
+      "id": "c2fc47a8-b747-437d-a655-ad183e79fcd8",
+      "name": "work",
+      "icon": "💻",
+      "color": "#6366f1",
+      "scheduleType": "weekly",
+      "weeklyTarget": 3,
+      "timerMode": "none",
+      "createdAt": "2026-04-10T08:14:34.974Z"
+    }
+  ],
+  "records": [],
+  "settings": {
+    "theme": "light",
+    "accentColor": "#f59e0b"
+  }
+}
