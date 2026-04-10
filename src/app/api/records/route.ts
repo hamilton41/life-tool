@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { sql, ensureDb } from "@/lib/db";
+import { sql } from "@/lib/db";
 import { Record as AppRecord } from "@/lib/types";
 
 function mapRecord(row: Record<string, unknown>): AppRecord {
@@ -15,7 +15,6 @@ function mapRecord(row: Record<string, unknown>): AppRecord {
 }
 
 export async function GET(req: NextRequest) {
-  await ensureDb();
   const { searchParams } = new URL(req.url);
   const date = searchParams.get("date");
   const weekStart = searchParams.get("weekStart");
@@ -35,11 +34,12 @@ export async function GET(req: NextRequest) {
     rows = await sql`SELECT * FROM records ORDER BY date ASC`;
   }
 
-  return NextResponse.json(rows.map((r) => mapRecord(r as Record<string, unknown>)));
+  return NextResponse.json(rows.map((r) => mapRecord(r as Record<string, unknown>)), {
+    headers: { "Cache-Control": "private, max-age=10, stale-while-revalidate=30" },
+  });
 }
 
 export async function POST(req: NextRequest) {
-  await ensureDb();
   const body = await req.json();
 
   const record: AppRecord = {
@@ -65,7 +65,6 @@ export async function POST(req: NextRequest) {
 }
 
 export async function PUT(req: NextRequest) {
-  await ensureDb();
   const body = await req.json();
 
   const rows = await sql`SELECT * FROM records WHERE id = ${body.id}`;
@@ -89,7 +88,6 @@ export async function PUT(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
-  await ensureDb();
   const { searchParams } = new URL(req.url);
   const id = searchParams.get("id");
 

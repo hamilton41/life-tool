@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { sql, ensureDb } from "@/lib/db";
+import { sql } from "@/lib/db";
 import { Task } from "@/lib/types";
 
 function mapTask(row: Record<string, unknown>): Task {
@@ -20,13 +20,13 @@ function mapTask(row: Record<string, unknown>): Task {
 }
 
 export async function GET() {
-  await ensureDb();
   const rows = await sql`SELECT * FROM tasks ORDER BY created_at ASC`;
-  return NextResponse.json(rows.map(mapTask));
+  return NextResponse.json(rows.map(mapTask), {
+    headers: { "Cache-Control": "private, max-age=10, stale-while-revalidate=30" },
+  });
 }
 
 export async function POST(req: NextRequest) {
-  await ensureDb();
   const body = await req.json();
 
   const task: Task = {
@@ -60,7 +60,6 @@ export async function POST(req: NextRequest) {
 }
 
 export async function PUT(req: NextRequest) {
-  await ensureDb();
   const body = await req.json();
 
   const rows = await sql`SELECT * FROM tasks WHERE id = ${body.id}`;
@@ -88,7 +87,6 @@ export async function PUT(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
-  await ensureDb();
   const { searchParams } = new URL(req.url);
   const id = searchParams.get("id");
 

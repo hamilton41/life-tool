@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { sql, ensureDb } from "@/lib/db";
+import { sql } from "@/lib/db";
 import { Settings } from "@/lib/types";
 
 function mapSettings(row: Record<string, unknown>): Settings {
@@ -10,13 +10,13 @@ function mapSettings(row: Record<string, unknown>): Settings {
 }
 
 export async function GET() {
-  await ensureDb();
   const rows = await sql`SELECT * FROM settings WHERE id = 1`;
-  return NextResponse.json(mapSettings(rows[0] as Record<string, unknown>));
+  return NextResponse.json(mapSettings(rows[0] as Record<string, unknown>), {
+    headers: { "Cache-Control": "private, max-age=60, stale-while-revalidate=120" },
+  });
 }
 
 export async function PUT(req: NextRequest) {
-  await ensureDb();
   const body = await req.json();
 
   await sql`
