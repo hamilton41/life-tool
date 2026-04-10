@@ -1,15 +1,33 @@
 import { NextRequest, NextResponse } from "next/server";
-import { readData, writeData } from "@/lib/data";
+import { sql, ensureDb } from "@/lib/db";
 import { Task } from "@/lib/types";
 
+function mapTask(row: Record<string, unknown>): Task {
+  return {
+    id: row.id as string,
+    name: row.name as string,
+    icon: row.icon as string,
+    color: row.color as string,
+    scheduleType: row.schedule_type as "weekly" | "fixed",
+    weeklyTarget: row.weekly_target as number | undefined,
+    fixedDays: row.fixed_days as number[] | undefined,
+    daySlots: row.day_slots as Task["daySlots"],
+    timeSlot: row.time_slot as Task["timeSlot"],
+    timerMode: row.timer_mode as "countdown" | "stopwatch" | "none",
+    countdownMinutes: row.countdown_minutes as number | undefined,
+    createdAt: row.created_at as string,
+  };
+}
+
 export async function GET() {
-  const data = readData();
-  return NextResponse.json(data.tasks);
+  await ensureDb();
+  const rows = await sql`SELECT * FROM tasks ORDER BY created_at ASC`;
+  return NextResponse.json(rows.map(mapTask));
 }
 
 export async function POST(req: NextRequest) {
+  await ensureDb();
   const body = await req.json();
-  const data = readData();
 
   const task: Task = {
     id: crypto.randomUUID(),
@@ -19,41 +37,67 @@ export async function POST(req: NextRequest) {
     scheduleType: body.scheduleType || "weekly",
     weeklyTarget: body.weeklyTarget,
     fixedDays: body.fixedDays,
+    daySlots: body.daySlots,
     timeSlot: body.timeSlot,
     timerMode: body.timerMode || "none",
     countdownMinutes: body.countdownMinutes,
     createdAt: new Date().toISOString(),
   };
 
-  data.tasks.push(task);
-  writeData(data);
+  await sql`
+    INSERT INTO tasks (id, name, icon, color, schedule_type, weekly_target, fixed_days, day_slots, time_slot, timer_mode, countdown_minutes, created_at)
+    VALUES (
+      ${task.id}, ${task.name}, ${task.icon}, ${task.color},
+      ${task.scheduleType}, ${task.weeklyTarget ?? null},
+      ${task.fixedDays ? JSON.stringify(task.fixedDays) : null},
+      ${task.daySlots ? JSON.stringify(task.daySlots) : null},
+      ${task.timeSlot ? JSON.stringify(task.timeSlot) : null},
+      ${task.timerMode}, ${task.countdownMinutes ?? null}, ${task.createdAt}
+    )
+  `;
+
   return NextResponse.json(task, { status: 201 });
 }
 
 export async function PUT(req: NextRequest) {
+  await ensureDb();
   const body = await req.json();
-  const data = readData();
 
-  const idx = data.tasks.findIndex((t) => t.id === body.id);
-  if (idx === -1) {
+  const rows = await sql`SELECT * FROM tasks WHERE id = ${body.id}`;
+  if (rows.length === 0) {
     return NextResponse.json({ error: "Task not found" }, { status: 404 });
   }
 
-  data.tasks[idx] = { ...data.tasks[idx], ...body };
-  writeData(data);
-  return NextResponse.json(data.tasks[idx]);
+  await sql`
+    UPDATE tasks SET
+      name               = ${body.name ?? rows[0].name},
+      icon               = ${body.icon ?? rows[0].icon},
+      color              = ${body.color ?? rows[0].color},
+      schedule_type      = ${body.scheduleType ?? rows[0].schedule_type},
+      weekly_target      = ${body.weeklyTarget ?? rows[0].weekly_target},
+      fixed_days         = ${body.fixedDays ? JSON.stringify(body.fixedDays) : rows[0].fixed_days},
+      day_slots          = ${body.daySlots ? JSON.stringify(body.daySlots) : rows[0].day_slots},
+      time_slot          = ${body.timeSlot ? JSON.stringify(body.timeSlot) : rows[0].time_slot},
+      timer_mode         = ${body.timerMode ?? rows[0].timer_mode},
+      countdown_minutes  = ${body.countdownMinutes ?? rows[0].countdown_minutes}
+    WHERE id = ${body.id}
+  `;
+
+  const updated = await sql`SELECT * FROM tasks WHERE id = ${body.id}`;
+  return NextResponse.json(mapTask(updated[0] as Record<string, unknown>));
 }
 
 export async function DELETE(req: NextRequest) {
+  await ensureDb();
   const { searchParams } = new URL(req.url);
   const id = searchParams.get("id");
+
   if (!id) {
     return NextResponse.json({ error: "Missing id" }, { status: 400 });
   }
 
-  const data = readData();
-  data.tasks = data.tasks.filter((t) => t.id !== id);
-  data.records = data.records.filter((r) => r.taskId !== id);
-  writeData(data);
+  await sql`DELETE FROM records WHERE task_id = ${id}`;
+  await sql`DELETE FROM tasks WHERE id = ${id}`;
+
   return NextResponse.json({ ok: true });
 }
