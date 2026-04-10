@@ -128,3 +128,8 @@
     @apply font-sans;
   }
 }
+
+/* 手機底部安全區域（iOS home indicator / Android 導航列）*/
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
+}

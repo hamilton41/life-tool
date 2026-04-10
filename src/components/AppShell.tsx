@@ -32,7 +32,7 @@ function AppContent({ children }: { children: ReactNode }) {
   return (
     <>
       <TimerBanner />
-      <main className="flex-1 pb-20">{children}</main>
+      <main className="flex-1" style={{ paddingBottom: "calc(5rem + env(safe-area-inset-bottom))" }}>{children}</main>
       <BottomNav />
       <TimerDialog />
       <Toaster />
