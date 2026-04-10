@@ -8,7 +8,7 @@ function mapTask(row: Record<string, unknown>): Task {
     name: row.name as string,
     icon: row.icon as string,
     color: row.color as string,
-    scheduleType: row.schedule_type as "weekly" | "fixed",
+    scheduleType: row.schedule_type as "weekly" | "fixed" | "none",
     weeklyTarget: row.weekly_target as number | undefined,
     fixedDays: row.fixed_days as number[] | undefined,
     daySlots: row.day_slots as Task["daySlots"],

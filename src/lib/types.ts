@@ -12,7 +12,7 @@ export interface Task {
   icon: string; // emoji
   color: string; // hex color
   // 排程方式
-  scheduleType: "weekly" | "fixed";
+  scheduleType: "weekly" | "fixed" | "none";
   // 週目標制：每週幾次
   weeklyTarget?: number;
   // 指定日制：每天可設不同時段

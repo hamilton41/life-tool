@@ -39,7 +39,7 @@ export default function HomePage() {
 
   // 今天需要做的任務
   const todayTasks = tasks.filter((task) => {
-    if (task.scheduleType === "weekly") return true;
+    if (task.scheduleType === "weekly" || task.scheduleType === "none") return true;
     if (task.scheduleType === "fixed" && task.fixedDays) {
       return task.fixedDays.includes(dayOfWeek);
     }
@@ -133,8 +133,8 @@ export default function HomePage() {
             const weeklyCount = getWeeklyCount(task.id);
             const target = task.scheduleType === "weekly"
               ? task.weeklyTarget || 1
-              : task.fixedDays?.length || 1;
-            const progressPct = Math.min((weeklyCount / target) * 100, 100);
+              : task.scheduleType === "fixed" ? task.fixedDays?.length || 1 : 0;
+            const progressPct = target > 0 ? Math.min((weeklyCount / target) * 100, 100) : 0;
 
             return (
               <Card key={task.id} className={`transition-all ${done ? "opacity-60" : ""}`}>
@@ -158,10 +158,18 @@ export default function HomePage() {
                       )}
                     </div>
                     <div className="mt-1 flex items-center gap-2">
-                      <Progress value={progressPct} className="h-1.5 flex-1" />
-                      <span className="text-xs text-muted-foreground whitespace-nowrap">
-                        {weeklyCount}/{target}
-                      </span>
+                      {task.scheduleType === "none" ? (
+                        <span className="text-xs text-muted-foreground whitespace-nowrap">
+                          本週 {weeklyCount} 次
+                        </span>
+                      ) : (
+                        <>
+                          <Progress value={progressPct} className="h-1.5 flex-1" />
+                          <span className="text-xs text-muted-foreground whitespace-nowrap">
+                            {weeklyCount}/{target}
+                          </span>
+                        </>
+                      )}
                     </div>
                     {task.scheduleType === "fixed" && (() => {
                       const slot = task.daySlots?.find((s) => s.day === dayOfWeek)
@@ -301,14 +309,14 @@ export default function HomePage() {
                   const weeklyCount = getWeeklyCount(task.id);
                   const target = task.scheduleType === "weekly"
                     ? task.weeklyTarget || 1
-                    : task.fixedDays?.length || 1;
+                    : task.scheduleType === "fixed" ? task.fixedDays?.length || 1 : 0;
 
                   return (
                     <div key={task.id} className="flex items-center gap-2">
                       <span className="w-6 text-center">{task.icon}</span>
                       <span className="text-sm flex-1 truncate">{task.name}</span>
-                      <span className={`text-sm font-mono ${weeklyCount >= target ? "text-green-500" : ""}`}>
-                        {weeklyCount}/{target}
+                      <span className={`text-sm font-mono ${task.scheduleType !== "none" && weeklyCount >= target ? "text-green-500" : ""}`}>
+                        {task.scheduleType === "none" ? `${weeklyCount} 次` : `${weeklyCount}/${target}`}
                       </span>
                     </div>
                   );

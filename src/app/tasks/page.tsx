@@ -38,7 +38,7 @@ interface TaskForm {
   name: string;
   icon: string;
   color: string;
-  scheduleType: "weekly" | "fixed";
+  scheduleType: "weekly" | "fixed" | "none";
   weeklyTarget: number;
   days: DaySlotForm[]; // 7 天，index 0=日 ~ 6=六
   timerMode: "countdown" | "stopwatch" | "none";
@@ -188,6 +188,9 @@ export default function TasksPage() {
     if (task.scheduleType === "weekly") {
       return `每週 ${task.weeklyTarget || 1} 次`;
     }
+    if (task.scheduleType === "none") {
+      return "彈性打卡";
+    }
 
     const parts: string[] = [];
     if (task.daySlots && task.daySlots.length > 0) {
@@ -333,13 +336,14 @@ export default function TasksPage() {
               <Select
                 value={form.scheduleType}
                 onValueChange={(v) =>
-                  setForm((f) => ({ ...f, scheduleType: v as "weekly" | "fixed" }))
+                  setForm((f) => ({ ...f, scheduleType: v as "weekly" | "fixed" | "none" }))
                 }
               >
                 <SelectTrigger className="mt-1">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="none">無設定（隨意打卡）</SelectItem>
                   <SelectItem value="weekly">週目標（每週 N 次）</SelectItem>
                   <SelectItem value="fixed">指定日期</SelectItem>
                 </SelectContent>

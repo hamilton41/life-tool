@@ -93,8 +93,9 @@ export default function WeeklyPage() {
     return records.some((r) => r.taskId === taskId && r.date === dateStr && r.completed);
   };
 
-  // 沒有時段的週目標任務
+  // 沒有時段的任務
   const weeklyTasks = tasks.filter((t) => t.scheduleType === "weekly");
+  const noneTasks = tasks.filter((t) => t.scheduleType === "none");
   const fixedNoTime = tasks.filter(
     (t) => t.scheduleType === "fixed" && !t.timeSlot && (!t.daySlots || t.daySlots.length === 0)
   );
@@ -131,24 +132,24 @@ export default function WeeklyPage() {
         </div>
       </div>
 
-      {/* 週目標任務（無時段） */}
-      {(weeklyTasks.length > 0 || fixedNoTime.length > 0) && (
+      {/* 週目標任務與彈性任務（無時段） */}
+      {(weeklyTasks.length > 0 || noneTasks.length > 0 || fixedNoTime.length > 0) && (
         <div className="mb-4">
           <div className="flex flex-wrap gap-2">
-            {[...weeklyTasks, ...fixedNoTime].map((task) => {
+            {[...weeklyTasks, ...noneTasks, ...fixedNoTime].map((task) => {
               const count = records.filter(
                 (r) => r.taskId === task.id && r.completed
               ).length;
               const target = task.scheduleType === "weekly"
                 ? task.weeklyTarget || 1
-                : task.fixedDays?.length || 1;
+                : task.scheduleType === "fixed" ? task.fixedDays?.length || 1 : 0;
               return (
                 <Badge
                   key={task.id}
-                  variant={count >= target ? "default" : "secondary"}
+                  variant={task.scheduleType !== "none" && count >= target ? "default" : "secondary"}
                   className="text-sm py-1 px-3"
                 >
-                  {task.icon} {task.name} {count}/{target}
+                  {task.icon} {task.name} {task.scheduleType === "none" ? `${count}次` : `${count}/${target}`}
                 </Badge>
               );
             })}
